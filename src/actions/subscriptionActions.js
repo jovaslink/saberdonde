@@ -227,7 +227,6 @@ export const retryInvoiceWithNewPaymentMethod = (
             Swal.fire("ERROR", error.message, "error");
           });
 
-        //dispatch(isRetrySubscription(true));
         dispatch(finishLoading());
       });
   };
