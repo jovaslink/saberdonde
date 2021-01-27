@@ -1,6 +1,7 @@
 import { types } from "../types/types";
 import { firebase } from "../firebase/firebase-config";
 import Swal from "sweetalert2";
+import { newSubscriptionDb } from "../actions/subscriptionActions";
 
 //accion registrar usuario
 
@@ -12,6 +13,8 @@ export const newRegister = (name, email, password) => {
       .then(async ({ user }) => {
         await user.updateProfile({ displayName: name });
         //dispatch(removeErrorMsgForm());
+        dispatch(newSubscriptionDb(user.uid));
+
         dispatch(login(user.uid, user.displayName, user.email));
       })
       .catch((e) => {

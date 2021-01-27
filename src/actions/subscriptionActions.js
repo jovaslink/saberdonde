@@ -1,33 +1,40 @@
 import axios from "axios";
 import Swal from "sweetalert2";
+import { db } from "../firebase/firebase-config";
 import { types } from "../types/types";
 import { finishLoading } from "./uiActions";
 
 //Actualizamos el state subscription paymentIntentStatus, invoiceStatus, subscriptionStatus
-export const subscription = (
-  paymentIntentStatus,
-  invoiceStatus,
-  subscriptionStatus,
-  client_secret,
-  idPaymentMethod,
-  idCustomer,
-  idSubscription,
-  idInvoice,
-  idProduct
-) => {
+// export const subscription = (
+//   paymentIntentStatus,
+//   invoiceStatus,
+//   subscriptionStatus,
+//   client_secret,
+//   idPaymentMethod,
+//   idCustomer,
+//   idSubscription,
+//   idInvoice,
+//   idProduct
+// ) => {
+//   return {
+//     type: types.subscription,
+//     payload: {
+//       paymentIntentStatus,
+//       invoiceStatus,
+//       subscriptionStatus,
+//       client_secret,
+//       idPaymentMethod,
+//       idCustomer,
+//       idSubscription,
+//       idInvoice,
+//       idProduct,
+//     },
+//   };
+// };
+export const subscription = (sub) => {
   return {
     type: types.subscription,
-    payload: {
-      paymentIntentStatus,
-      invoiceStatus,
-      subscriptionStatus,
-      client_secret,
-      idPaymentMethod,
-      idCustomer,
-      idSubscription,
-      idInvoice,
-      idProduct,
-    },
+    payload: sub,
   };
 };
 
@@ -93,7 +100,6 @@ export const startSubscriptionAuth = () => {
 //Crear suscripcion Stripe
 export const newSubscription = (paymentMethod) => {
   return async (dispatch, getState) => {
-    //console.log("[PaymentMethod]", paymentMethod);
     Swal.fire({
       title: "Procesando...",
       text: "Espere un momento...",
@@ -118,7 +124,7 @@ export const newSubscription = (paymentMethod) => {
     );
 
     const idInvoice = newSub.latest_invoice.id;
-    //console.log(idInvoice);
+
     const { data: invoice } = await axios.post(
       "http://localhost:3001/api/getinvoice",
       {
@@ -127,27 +133,26 @@ export const newSubscription = (paymentMethod) => {
     );
 
     if (newSub.status === "active") {
-      dispatch(
-        subscription(
-          "succeeded",
-          invoice.status,
-          newSub.status,
-          null,
-          id,
-          newSub.customer,
-          newSub.id,
-          idInvoice,
-          newSub.items.data[0].price.product
-        )
-      );
+      const objSub = {
+        payment: "succeeded",
+        invoice: invoice.status,
+        subscription: newSub.status,
+        client_secret: null,
+        idPaymentMethod: id,
+        idCustomer: newSub.customer,
+        idSubscription: newSub.id,
+        idInvoice: idInvoice,
+        idProduct: newSub.items.data[0].price.product,
+      };
+
+      dispatch(subscription(objSub));
       Swal.close();
       dispatch(finishLoading());
       Swal.fire("Éxito", "Método de pago aceptado", "success");
       //console.log(newSub.items.data[0].price.product);
     } else {
-      dispatch(
-        subscription(
-          newSub.latest_invoice.payment_intent.status,
+      /*
+       newSub.latest_invoice.payment_intent.status,
           invoice.status,
           newSub.status,
           newSub.latest_invoice.payment_intent.client_secret,
@@ -155,9 +160,21 @@ export const newSubscription = (paymentMethod) => {
           newSub.customer,
           newSub.id,
           idInvoice,
-          newSub.items.data[0].price.product
-        )
-      );
+          newSub.items.data[0].price.product*/
+
+      const objSub = {
+        payment: newSub.latest_invoice.payment_intent.status,
+        invoice: invoice.status,
+        subscription: newSub.status,
+        client_secret: newSub.latest_invoice.payment_intent.client_secret,
+        idPaymentMethod: id,
+        idCustomer: newSub.customer,
+        idSubscription: newSub.id,
+        idInvoice: idInvoice,
+        idProduct: newSub.items.data[0].price.product,
+      };
+
+      dispatch(subscription(objSub));
 
       if (
         newSub.latest_invoice.payment_intent.status ===
@@ -243,6 +260,7 @@ export const startRetrieveCustomerPaymentMethod = () => {
     );
 
     dispatch(RetrieveCustomerPaymentMethod(data.card.last4, data.card.brand));
+    dispatch(updateSubscriptionDb());
   };
 };
 
@@ -253,5 +271,61 @@ export const RetrieveCustomerPaymentMethod = (last4, brand) => {
       last4,
       brand,
     },
+  };
+};
+
+export const getSubscriptionDb = () => {
+  return (dispatch, getState) => {
+    const { uid } = getState().auth;
+
+    db.collection("subscription")
+      .where("uid", "==", uid)
+      .get()
+      .then((snapSubscription) => {
+        snapSubscription.forEach((snapHijo) => {
+          const objSub = snapHijo.data();
+          delete objSub.uid;
+          dispatch(subscription(objSub));
+        });
+      })
+      .catch((err) => {
+        console.log("ES UN ERROR", err);
+      });
+  };
+};
+
+export const newSubscriptionDb = (uid) => {
+  return async () => {
+    const newSubscr = {
+      uid: uid,
+      payment: "",
+      invoice: "",
+      subscription: "",
+      client_secret: "",
+      idPaymentMethod: "",
+      idCustomer: "",
+      idSubscription: "",
+      idInvoice: "",
+      idProduct: "",
+      last4: "",
+      brand: "",
+      isRetry: false,
+    };
+
+    await db.collection("subscription").doc(uid).set(newSubscr);
+  };
+};
+
+export const updateSubscriptionDb = () => {
+  return (dispatch, getState) => {
+    const { auth, subscription } = getState();
+
+    db.collection("subscription")
+      .doc(auth.uid)
+      .update(subscription)
+      .then((result) => {})
+      .catch((e) => {
+        console.log(e);
+      });
   };
 };

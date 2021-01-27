@@ -36,7 +36,6 @@ export const CheckOutForm = () => {
         })
         .then((result) => {
           if (result.error) {
-            console.log(result.error.message);
             Swal.close();
 
             Swal.fire("ERROR", result.error.message, "error");
@@ -104,7 +103,7 @@ export const CheckOutForm = () => {
         dispatch(newSubscription(paymentMethod));
       } else {
         //enviar paymethod a dispatch newSuscription
-        console.log(paymentMethod.id);
+
         dispatch(
           retryInvoiceWithNewPaymentMethod(
             subscription.idCustomer,

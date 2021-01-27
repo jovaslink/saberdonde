@@ -1,7 +1,9 @@
 import React from "react";
 import { Link, NavLink } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 export const Sidebar = () => {
+  const { name } = useSelector((state) => state.auth);
   return (
     <>
       {/* Main Sidebar Container */}
@@ -30,7 +32,7 @@ export const Sidebar = () => {
             </div>
             <div className="info">
               <Link to="/dashboard" className="d-block">
-                <div className="desborde">Nombre del comercio</div>
+                <div className="desborde">{name}</div>
               </Link>
             </div>
           </div>

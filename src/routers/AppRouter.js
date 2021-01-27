@@ -9,6 +9,7 @@ import { PrivateRoute } from "./PrivateRoute";
 import { AuthRouter } from "./AuthRouter";
 import { DashboardRouter } from "./DashboardRouter";
 import { login } from "../actions/authActions";
+import { getSubscriptionDb } from "../actions/subscriptionActions";
 
 export default function AppRouter() {
   //const isLoggedIn = true;
@@ -23,6 +24,7 @@ export default function AppRouter() {
       if (user?.uid) {
         dispatch(login(user.uid, user.displayName, user.email));
         setIsLoggedIn(true);
+        dispatch(getSubscriptionDb());
       } else {
         setIsLoggedIn(false);
       }

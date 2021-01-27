@@ -1,6 +1,6 @@
 import { types } from "../types/types";
 const initialState = {
-  payment: "",
+  payment: "tu mama",
   invoice: "",
   subscription: "",
   client_secret: "",
@@ -10,7 +10,7 @@ const initialState = {
   idInvoice: "",
   idProduct: "",
   last4: "",
-  brand: "",
+  brand: "Pedro",
   isRetry: false,
 };
 
@@ -19,16 +19,22 @@ export const subscriptionReducer = (state = initialState, action) => {
     case types.subscription:
       return {
         ...state,
-        payment: action.payload.paymentIntentStatus,
-        invoice: action.payload.invoiceStatus,
-        subscription: action.payload.subscriptionStatus,
-        client_secret: action.payload.client_secret,
-        idPaymentMethod: action.payload.idPaymentMethod,
-        idCustomer: action.payload.idCustomer,
-        idSubscription: action.payload.idSubscription,
-        idInvoice: action.payload.idInvoice,
-        idProduct: action.payload.idProduct,
+        ...action.payload,
       };
+
+    // case types.subscription:
+    //   return {
+    //     ...state,
+    //     payment: action.payload.paymentIntentStatus,
+    //     invoice: action.payload.invoiceStatus,
+    //     subscription: action.payload.subscriptionStatus,
+    //     client_secret: action.payload.client_secret,
+    //     idPaymentMethod: action.payload.idPaymentMethod,
+    //     idCustomer: action.payload.idCustomer,
+    //     idSubscription: action.payload.idSubscription,
+    //     idInvoice: action.payload.idInvoice,
+    //     idProduct: action.payload.idProduct,
+    //   };
 
     case types.subscriptionAuth:
       return {
